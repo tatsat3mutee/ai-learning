@@ -2,7 +2,7 @@
 
 A single-page, offline-friendly revision notebook for AI engineering, machine learning, deep learning and CS/maths foundations, built and maintained by [Tatsat Pandey](https://tatsatpandey.com).
 
-**Open it:** download `index.html` and open it in a browser, or view it via GitHub Pages if it's enabled for this repo.
+**Open it:** https://tatsat3mutee.github.io/ai-learning/ (or download `index.html` and open it in any browser).
 
 ## What's inside
 
