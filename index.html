@@ -198,6 +198,11 @@ svg .fill1{fill:var(--teal)} svg .fill2{fill:var(--violet)} svg .fill3{fill:var(
 .use dd{margin:0}
 .uselink{display:inline-block;margin-top:10px;font-size:.9rem;color:var(--violet)}
 @media (max-width:480px){.use dl{grid-template-columns:1fr;gap:2px}.use dd{margin-bottom:8px}}
+.explain{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:0 12px 12px 0;padding:4px 16px;margin:12px 0}
+.explain p{margin:10px 0}
+.qa{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+.qa summary{cursor:pointer;font-weight:600}
+.qa p{margin:8px 0 2px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -2645,6 +2650,168 @@ const ENG5=[
  src:[L(`Red-team tooling: garak, Llama Guard, PyRIT`,`18-ethics-safety-alignment/16-red-team-tooling-garak-llamaguard-pyrit`),L(`Red teaming and automated attacks`,`18-ethics-safety-alignment/12-red-teaming-pair-automated-attacks`),L(`Chaos engineering for LLMs`,`17-infrastructure-and-production/24-chaos-engineering-llm`)]}
 ];
 
+/* Figures for Module 6 (fine-tuning) and Module 7 (what's new). */
+Object.assign(FIG,{
+ftguide(){return chainV([
+  {t:'1 What fine-tuning is',s:'Karpathy · Krish Naik',c:'c1'},
+  {t:'2 Model + method',s:'QLoRA first · Dettmers',c:'c1'},
+  {t:'3 Dataset',s:'quality > quantity',c:'c2'},
+  {t:'4 Hyperparameters',s:'Lesson 4b',c:'c2'},
+  {t:'5 Install',s:'Colab / Kaggle',c:'bx'},
+  {t:'6 Train + evaluate',s:'loss 0.5–1.0',c:'c3'},
+  {t:'7 Run + deploy',s:'GGUF · vLLM',c:'c3'},
+  {t:'8 Go further',s:'DPO · GRPO',c:'c4'}])},
+ftstages(){return chainH([
+  {t:'Pretrain',s:'next token',c:'g'},
+  {t:'SFT',s:'formats',c:'c1'},
+  {t:'Preference',s:'DPO / RLHF',c:'c2'},
+  {t:'RL',s:'GRPO / RLVR',c:'c4'}],22,'Base model → assistant → better choices → verified skills')},
+ftdecide(){let b='';
+  b+=rc(120,10,120,34,'bx')+tx(180,31,'What do you need?','tb');
+  const opts=[[12,'Changing facts','→ RAG','c1'],[128,'Fixed behaviour','→ fine-tune','c2'],[244,'Both','→ FT + RAG','c3']];
+  opts.forEach(([x,a,c,k])=>{b+=pa(`M180,44 L${x+52},78`,'ar')+rc(x,80,104,50,k)+tx(x+52,101,a,'tb')+tx(x+52,119,c,'t')});
+  b+=tx(180,150,'Format, tone, a narrow skill, a smaller model = fine-tune','tm');
+  return svg(160,b)},
+fttemplate(){let b='';const segs=[['system',66,'g'],['user: log lines',106,'c1'],['assistant: JSON',112,'c2'],['EOS',44,'c4']];let x=12;
+  b+=tx(12,16,'One training row after apply_chat_template','tm','start');
+  segs.forEach(([t,w,c])=>{b+=rc(x,24,w-4,36,c,6)+tx(x+(w-4)/2,46,t,'t');x+=w});
+  x=12;b+=tx(12,82,'labels used in the loss','tm','start');
+  segs.forEach(([t,w,c],i)=>{const on=i>=2;b+=rc(x,90,w-4,26,on?'c3':'bx',6)+tx(x+(w-4)/2,107,on?'learn':'-100','tf');x+=w});
+  b+=tx(180,140,'Masked tokens (-100) are ignored; the model learns only the answer + EOS','tm');
+  return svg(150,b)},
+ftdata(){return chainV([
+  {t:'Seeds',s:'~60 written by hand',c:'c1'},
+  {t:'Generate',s:'strong model, varied',c:'c2'},
+  {t:'Validate',s:'schema checks, drop bad',c:'c3'},
+  {t:'Dedupe + balance',s:'every class covered',c:'c3'},
+  {t:'Split',s:'test set hand-checked',c:'c4'}])},
+ftlora(){let b='';
+  b+=tx(20,104,'x','tb');
+  b+=pa('M30,100 L46,100 L46,40 L150,40','ar')+pa('M46,100 L46,160 L110,160','ar');
+  b+=rc(150,18,120,44,'g')+tx(210,38,'W  (d × k)','tb')+tx(210,54,'frozen, 4-bit in QLoRA','tm');
+  b+=rc(110,140,50,40,'c1')+tx(135,158,'A','tb')+tx(135,172,'r × k','tm');
+  b+=ln(160,160,190,160,'ar');
+  b+=rc(190,140,50,40,'c2')+tx(215,158,'B','tb')+tx(215,172,'d × r','tm');
+  b+=pa('M240,160 L290,160 L300,112','ar')+pa('M270,40 L290,40 L300,88','ar');
+  b+=`<circle cx="305" cy="100" r="13" class="bx"/>`+tx(305,105,'+','tb');
+  b+=ln(318,100,348,100,'ar')+tx(340,90,'h','tb');
+  b+=tx(180,104,'only A and B train','tm');
+  b+=tx(180,204,'h = W·x + (α/r)·B·A·x','tf')+tx(180,222,'B starts at 0, so h = W·x at step 0','tm');
+  return svg(232,b)},
+ftmem(){let b='';const rows=[['Full FT (16-bit + Adam)',48,'c4','≈ 48 GB'],['LoRA (16-bit base)',6.5,'c2','≈ 6.5 GB'],['QLoRA (4-bit base)',2.2,'c1','≈ 2.2 GB']];
+  b+=tx(12,16,'3B model: weights + trainable state, before activations (approx.)','tm','start');
+  rows.forEach(([n,v,c,l],i)=>{const y=30+i*44,w=Math.max(6,v/48*230);b+=tx(12,y+12,n,'t','start')+rc(12,y+18,w,16,c,4)+tx(12+w+6,y+30,l,'tm','start')});
+  b+=tx(180,170,'A free T4 has 16 GB: only QLoRA (or LoRA) fits comfortably','tm');
+  return svg(180,b)},
+fthparams(){let b='';
+  b+=rc(8,10,166,170,'c4')+tx(91,30,'Overfitting','tb')+tx(91,46,'train loss under ~0.2','tm');
+  ['lower learning rate','fewer epochs','more weight decay / dropout','bigger batch','early stopping','halve alpha'].forEach((s,i)=>b+=tx(18,70+i*18,'• '+s,'t','start'));
+  b+=rc(186,10,166,170,'c1')+tx(269,30,'Underfitting','tb')+tx(269,46,'loss stays high','tm');
+  ['raise learning rate','train longer (watch val)','raise rank and alpha','more relevant data','try batch size 1'].forEach((s,i)=>b+=tx(196,70+i*18,'• '+s,'t','start'));
+  return svg(190,b)},
+ftloss(){return plot([
+  {f:x=>1.9*Math.exp(-x/1.1)+0.35,c:'s1',n:'train loss'},
+  {f:x=>1.6*Math.exp(-x/1.0)+0.55+0.09*Math.max(0,x-1.6)**2,c:'s4',n:'val loss'}],
+  {x0:0,x1:4,y0:0,y1:2.2,xl:'epochs',extra:(mx,my,B,T)=>ln(mx(1.6),T,mx(1.6),B,'dash')+tx(mx(1.6)+4,T+12,'best checkpoint','tm','start')+tx(mx(3.1),my(1.05),'overfitting','tm')})},
+ftdpo(){let b='';
+  b+=rc(8,40,62,36,'bx')+tx(39,62,'prompt','t');
+  b+=ln(70,58,92,58,'ar')+rc(92,40,70,36,'c1')+tx(127,56,'SFT model','t')+tx(127,70,'4 samples','tm');
+  b+=ln(162,58,184,58,'ar')+rc(184,40,74,36,'c3')+tx(221,56,'rules +','t')+tx(221,70,'judge rank','tm');
+  b+=pa('M258,50 L286,26','ar')+pa('M258,66 L286,90','ar');
+  b+=rc(286,10,66,30,'c1')+tx(319,29,'chosen','t')+rc(286,76,66,30,'c4')+tx(319,95,'rejected','t');
+  b+=pa('M319,106 L319,128 L250,138','ar')+pa('M319,40 L340,40 L340,128 L260,140','lm');
+  b+=rc(120,124,130,40,'c2')+tx(185,142,'DPO update','tb')+tx(185,156,'policy vs frozen ref','tm');
+  b+=tx(180,186,'Push p(chosen) up and p(rejected) down, relative to the reference','tm');
+  return svg(196,b)},
+fteval(){let b='';
+  b+=rc(8,70,84,44,'c3')+tx(50,89,'300 test','tb')+tx(50,104,'+30 real-ish','tm');
+  const s=[['Base (prompted)','g'],['SFT','c1'],['SFT + DPO','c2'],['Frontier model','bx']];
+  s.forEach(([n,c],i)=>{const y=14+i*42;b+=pa(`M92,92 L128,${y+16}`,'ar')+rc(128,y,110,32,c)+tx(183,y+20,n,'t')+ln(238,y+16,262,92,'lm')});
+  b+=rc(262,56,94,72,'c4')+tx(309,76,'same harness','tb')+tx(309,92,'JSON-valid %','tm')+tx(309,106,'accuracy · F1','tm')+tx(309,120,'judge score','tm');
+  b+=tx(180,190,'Same prompts, temperature 0, 3 seeds: only then compare numbers','tm');
+  return svg(200,b)},
+ftship(){let b='';
+  b+=rc(8,60,76,40,'c2')+tx(46,78,'LoRA','tb')+tx(46,92,'adapter','tm');
+  b+=pa('M84,72 L112,40','ar')+pa('M84,88 L112,122','ar');
+  b+=rc(112,20,70,36,'c1')+tx(147,42,'merge','t');
+  b+=ln(182,38,204,38,'ar')+rc(204,20,70,36,'c1')+tx(239,36,'GGUF','t')+tx(239,50,'Q4_K_M','tm');
+  b+=ln(274,38,294,38,'ar')+rc(294,20,58,36,'c3')+tx(323,36,'Ollama','t')+tx(323,50,'laptop','tm');
+  b+=rc(112,104,92,36,'c4')+tx(158,120,'vLLM','t')+tx(158,134,'multi-LoRA','tm');
+  b+=ln(204,122,226,122,'ar')+rc(226,104,126,36,'c3')+tx(289,120,'many users','t')+tx(289,134,'1 base + adapters','tm');
+  b+=tx(180,168,'Re-run your eval after quantizing: Q4 can cost a point or two','tm');
+  return svg(178,b)},
+ftproject(){return chainV([
+  {t:'Phase 0 · baseline',s:'gate: numbers + schema',c:'g'},
+  {t:'Phase 1 · dataset',s:'gate: ≥ 98% valid',c:'c1'},
+  {t:'Phase 2 · QLoRA SFT',s:'gate: ≥ 97% JSON',c:'c2'},
+  {t:'Phase 3 · DPO',s:'gate: judge score up',c:'c4'},
+  {t:'Phase 4 · ship',s:'gate: Ollama + RCA',c:'c3'}])},
+nwmap(){let b='';
+  b+=rc(130,78,100,40,'bx')+tx(180,96,'LLM in 2026','tb')+tx(180,110,'what is changing','tm');
+  const p=[[8,8,'Looped depth','↑ compute, = params','c2'],[244,8,'Hybrid attention','cheaper long context','c1'],[8,150,'MoE','↑ params, = compute','c3'],[244,150,'RLVR post-training','verified rewards','c4'],[120,176,'Diffusion, tiny loops','wild cards','g']];
+  p.forEach(([x,y,t,s,c])=>{const w=x===120?120:108;b+=rc(x,y,w,40,c)+tx(x+w/2,y+18,t,'t')+tx(x+w/2,y+32,s,'tm');b+=ln(x+w/2,y+(y<78?40:0),180,y<78?78:118,'lm')});
+  return svg(222,b)},
+nwloop(){let b='';
+  b+=tx(80,16,'Standard: 6 different layers','tm');
+  ['L1','L2','L3','L4','L5','L6'].forEach((l,i)=>{b+=rc(40,24+i*28,80,22,'bx',5)+tx(80,39+i*28,l,'t')});
+  b+=tx(80,200,'6 weights, 6 compute steps','tm');
+  b+=tx(268,16,'Looped: shared core × r','tm');
+  b+=rc(228,24,80,22,'c1',5)+tx(268,39,'prelude','t');
+  b+=ln(268,46,268,62,'ar');
+  b+=rc(220,62,96,64,'c2',8)+tx(268,90,'core block','tb')+tx(268,106,'same weights','tm');
+  b+=pa('M316,82 C352,82 352,110 316,110','ar')+tx(344,76,'× r','tb');
+  b+=ln(268,126,268,142,'ar')+rc(228,142,80,22,'c3',5)+tx(268,157,'coda','t');
+  b+=tx(268,200,'compute ↑ with r, params fixed','tm');
+  return svg(212,b)},
+nwglm(){let b='';
+  b+=tx(180,16,'GLM-5.4 (Z.ai, 23 Nov 2026), as reported','tm');
+  b+=rc(20,28,140,40,'c2')+tx(90,46,'28 shared layers','tb')+tx(90,60,'pass 1','tm');
+  b+=ln(160,48,200,48,'ar')+rc(200,28,140,40,'c2')+tx(270,46,'same 28 layers','tb')+tx(270,60,'pass 2 (refines pass 1)','tm');
+  b+=rc(184,82,170,30,'g')+tx(269,101,'extra cache: recent window only','tm');
+  b+=tx(180,136,'~750B params · continued training from GLM-5 base','t');
+  b+=tx(180,154,'30B test: GPQA-Diamond 47.58 → 56.26 with ~10% more training compute','tm');
+  return svg(166,b)},
+nwhybrid(){let b='';const pat='LLLFLLLFLLLF';
+  b+=tx(12,16,'Layer stack, 3 : 1 hybrid (e.g. Qwen3-Next / Kimi Linear style)','tm','start');
+  [...pat].forEach((k,i)=>{const x=12+i*28;b+=rc(x,26,24,36,k==='F'?'c4':'c1',4)+tx(x+12,49,k==='F'?'full':'lin','tm')});
+  b+=rc(12,76,14,12,'c1',2)+tx(32,86,'linear / SSM: fixed-size state, O(n)','tm','start');
+  b+=rc(12,96,14,12,'c4',2)+tx(32,106,'full attention: exact recall, KV cache grows, O(n²)','tm','start');
+  return svg(118,b)},
+nwcost(){return plot([
+  {f:x=>x*x,c:'s4',n:'full attention ∝ n²'},
+  {f:x=>x,c:'s1',n:'linear / SSM ∝ n'},
+  {f:x=>0.75*x+0.25*x*x,c:'s2',n:'3:1 hybrid'}],
+  {x0:0,x1:4,y0:0,y1:16,xl:'context length (relative)'})},
+nwmoe(){let b='';
+  b+=rc(8,70,60,36,'bx')+tx(38,92,'token','t');
+  b+=ln(68,88,96,88,'ar')+rc(96,66,64,44,'c3')+tx(128,86,'router','tb')+tx(128,100,'top-2','tm');
+  for(let i=0;i<8;i++){const y=8+i*21,on=i===1||i===5;b+=rc(196,y,72,17,on?'c2':'bx',4)+tx(232,y+12,'expert '+(i+1),on?'t':'tm');b+=ln(160,88,196,y+8,on?'ar':'lm')}
+  b+=pa('M268,37 L300,88','ar')+pa('M268,121 L300,88','ar');
+  b+=`<circle cx="312" cy="88" r="12" class="bx"/>`+tx(312,93,'+','tb')+ln(324,88,350,88,'ar');
+  b+=tx(180,196,'All 8 experts sit in memory; only 2 run for this token','tm');
+  return svg(206,b)},
+nwgrpo(){let b='';
+  b+=rc(8,70,60,36,'bx')+tx(38,92,'prompt','t');
+  b+=ln(68,88,94,88,'ar')+rc(94,66,64,44,'c2')+tx(126,86,'policy','tb')+tx(126,100,'G samples','tm');
+  const r=[1,0,1,0];
+  r.forEach((v,i)=>{const y=14+i*40;b+=ln(158,88,182,y+14,'lm')+rc(182,y,80,28,v?'c1':'c4',5)+tx(222,y+18,'ans '+(i+1)+': r = '+v,'t')});
+  b+=ln(262,88,280,88,'ar')+rc(280,56,74,64,'c3')+tx(317,76,'advantage','tb')+tx(317,92,'r − mean','tm')+tx(317,106,'÷ std','tm');
+  b+=tx(180,184,'A verifier scores each answer 1 or 0;','tm')+tx(180,198,'above-average answers are pushed up','tm');
+  return svg(208,b)},
+nwdiff(){let b='';
+  b+=tx(12,16,'Autoregressive: one token per step, left to right','tm','start');
+  ['The','log','shows','a','pool','leak'].forEach((w,i)=>{b+=rc(12+i*56,24,50,24,i<4?'c1':'g',4)+tx(37+i*56,40,i<4?w:'…','t')});
+  b+=tx(12,74,'Diffusion: whole block masked, refined in a few parallel steps','tm','start');
+  const steps=[['▢','▢','▢','▢','▢','▢'],['The','▢','shows','▢','pool','▢'],['The','log','shows','a','pool','leak']];
+  steps.forEach((s,j)=>s.forEach((w,i)=>{b+=rc(12+i*56,82+j*30,50,24,w==='▢'?'g':'c2',4)+tx(37+i*56,98+j*30,w==='▢'?'mask':w,'t')}));
+  return svg(176,b)},
+nwrelease(){return chainV([
+  {t:'1 Architecture',s:'what changed in the model',c:'c1'},
+  {t:'2 Training',s:'data, post-training',c:'c2'},
+  {t:'3 Evals',s:'named tasks + sample size?',c:'c3'},
+  {t:'4 Claims',s:'no method = wait',c:'c4'}])}
+});
+
 const G6='Module 6: Fine-tuning and post-training';
 const ENG6=[
 {id:'ft-guide',grp:G6,ch:'Start here',title:'Study guide: the Unsloth fine-tuning guide, step by step',tag:`Read one section of the guide, then watch the matching videos. Eight steps, about two weekends.`,
@@ -2833,6 +3000,97 @@ const ENG7=[
  formulas:[],
  cap:``}
 ];
+
+/* Plain-language explanations, diagrams and self-checks for Modules 6 and 7. */
+const EXTRA67={
+'ft-guide':{fig:'ftguide',cap:'The eight steps of Unsloth’s guide, with what to watch at each.',
+ ex:[`Think of fine-tuning as on-the-job training for a model that already speaks the language. Pretraining taught it language and facts from the internet; fine-tuning teaches it your job: your format, your vocabulary, your decisions.`,
+  `The guide is a recipe. Pick a small instruct model, load it in 4-bit (QLoRA), show it a few thousand good examples, train for one to three passes, check it, then export it. Most of the skill is in the data and in reading the loss, not in exotic settings.`,
+  `<b>Example:</b> for LogLens you show Granite-4.1-3B 3,400 pairs of “log lines → triage JSON”. After training it produces that JSON reliably, where the base model often drifted from the schema.`],
+ q:[[`Why start with QLoRA instead of full fine-tuning?`,`It fits on a free 16 GB GPU, trains ~1% of the weights, and Unsloth notes that if LoRA/QLoRA fails, full fine-tuning rarely fixes it.`],[`What usually decides whether a fine-tune works?`,`Dataset quality and quantity, more than hyperparameters.`]]},
+'ft-when':{fig:'ftstages',cap:'The post-training stages, from base model to verified skills.',fig2:'ftdecide',cap2:'A quick decision: RAG for facts that change, fine-tuning for behaviour.',
+ ex:[`A base model only continues text. SFT shows it examples of instructions and good answers, so it learns to follow requests and formats. Preference tuning (DPO, RLHF) then teaches it which of two reasonable answers people prefer. RL with verifiable rewards (GRPO) lets it practise on tasks a program can check.`,
+  `RAG and fine-tuning solve different problems. RAG puts fresh documents in front of the model at question time. Fine-tuning changes the model’s habits. If your answer depends on facts that change weekly, retrieve them; if it depends on a style or a decision procedure, train it.`,
+  `<b>Example:</b> a billing bot needs today’s tariff (RAG) and must always answer in your ticket template (fine-tune). Use both.`],
+ q:[[`A model ignores your JSON schema 10% of the time even with a good prompt. RAG or fine-tune?`,`Fine-tune: it is a behaviour/format problem, not missing knowledge.`],[`What does SFT teach that pretraining doesn’t?`,`To follow instructions and produce answers in a given format, turn by turn.`]]},
+'ft-templates':{fig:'fttemplate',cap:'Only the assistant tokens and the end-of-text token count in the loss.',
+ ex:[`Chat models read conversations as one long string with special markers: who is speaking, where each turn ends. Granite wraps each turn in role markers and ends it with an end-of-text token. If you train with different markers, the model learns a dialect it will never see in real use.`,
+  `Loss masking decides what the model is graded on. You set the label of every system and user token to -100, which tells the loss function to skip it. The model is then only scored on producing the answer and the stop token, which is exactly the behaviour you want.`,
+  `<b>Example:</b> a LogLens row is about 600 tokens of logs and 80 tokens of JSON. Without masking, 88% of the training signal would be “predict the next log line”, which is useless.`],
+ q:[[`Your fine-tuned model answers correctly but never stops. Likely cause?`,`The EOS token is missing from the assistant turns in the training data, or the chat template doesn’t match.`],[`What does a label of -100 mean?`,`Ignore this token in the cross-entropy loss.`]]},
+'ft-data':{fig:'ftdata',cap:'A synthetic-data pipeline where code, not hope, guarantees quality.',
+ ex:[`Synthetic data means asking a strong model to write training examples for a smaller one. It is cheap and fast, but the generator makes mistakes and repeats itself, so every row must pass automatic checks before it is kept.`,
+  `Checks are simple and strict: does the JSON parse, are all fields valid, do the cited line numbers exist, is the label what we asked for? A row that fails is dropped. Then remove near-duplicates and make sure each class has enough examples.`,
+  `<b>Example:</b> if 4,000 rows are generated and 3,800 pass, you train on 3,800. If “DEADLOCK” only has 40 rows, generate more for it before training.`],
+ q:[[`Why keep a small set of real (non-synthetic) test cases?`,`To catch a model that only learned the generator’s style; a big gap between synthetic and real scores shows it.`],[`Should you hand-fix rows that fail validation?`,`No. Drop them; fixing invites inconsistent labels and bias.`]]},
+'ft-lora':{fig:'ftlora',cap:'LoRA: the big matrix W stays frozen; two thin matrices A and B learn the change.',fig2:'ftmem',cap2:'Why QLoRA fits a free GPU: memory for weights and trainable state.',
+ ex:[`A layer’s weight matrix W might be 2048 × 2048, about four million numbers. Full fine-tuning updates all of them. LoRA bets that the change you need is simple, so it learns it as the product of two thin matrices: A (16 × 2048) and B (2048 × 16), about 65,000 numbers.`,
+  `B starts at zero, so at step zero the model is exactly the original. During training only A and B change, and their product is added to W’s output, scaled by α/r. QLoRA stores W in 4-bit to save memory while A and B train in 16-bit.`,
+  `<b>Example:</b> with rank 16 on all seven layer types of a 32-layer model, LoRA trains about 24 million parameters, under 1% of a 3B model.`],
+ q:[[`Why does B start at zero?`,`So B·A = 0 and training starts from the exact base model.`],[`What does QLoRA quantize, and what stays 16-bit?`,`The frozen base weights go to 4-bit NF4; the LoRA adapters (and their gradients) stay 16-bit.`]]},
+'ft-hparams':{fig:'fthparams',cap:'Read the loss, then turn the right knob.',
+ ex:[`Most runs need only a few settings: rank, alpha, learning rate, epochs and effective batch size. Start from Unsloth’s defaults and change one thing at a time.`,
+  `If training loss drops very low (under about 0.2) the model is memorising: make learning gentler or shorter. If loss stays high, the model is not learning enough: give it more capacity, more steps or better data.`,
+  `<b>Example:</b> 3,400 rows, batch 2 × accumulation 8 = 16 per step → 213 steps per epoch → 426 steps for 2 epochs → about 21–43 warmup steps.`],
+ q:[[`Loss falls to 0.05 by epoch 2. What two changes do you try first?`,`Fewer epochs (or early stopping) and a lower learning rate; halving alpha is another option.`],[`What learning rate is typical for LoRA SFT versus DPO?`,`About 2e-4 for LoRA/QLoRA SFT; about 5e-6 for DPO or GRPO.`]]},
+'ft-sft':{fig:'ftloss',cap:'Train loss keeps falling; validation loss turns up when overfitting starts.',
+ ex:[`During SFT the trainer shows the model batches of examples, measures how surprised it is by the correct answer (the loss), and nudges the adapters to be less surprised. Watching both training and validation loss tells you whether it is learning or memorising.`,
+  `Stop at the checkpoint where validation loss is lowest, then confirm with your task metric. Sometimes validation loss rises slightly while the task metric still improves; trust the task metric, but check outputs by hand.`,
+  `<b>Example:</b> on Kaggle a 3B QLoRA run with 3,400 rows and 2 epochs typically takes 1–2 hours; first try max_steps = 60 to make sure everything runs.`],
+ q:[[`Loss is near zero after 30 steps. What is the likely problem?`,`Duplicates or leakage between train and validation data, or a trivial task.`],[`Why do a 60-step test run first?`,`To catch template, masking and memory bugs in minutes, not hours.`]]},
+'ft-dpo':{fig:'ftdpo',cap:'On-policy DPO: sample, rank, then train on best versus worst.',
+ ex:[`SFT teaches the model to copy one good answer. But often several answers are valid and some are better than others. DPO shows the model pairs, a chosen answer and a rejected one, and pushes it to prefer the chosen one more than a frozen copy of itself (the reference) does.`,
+  `β controls how far it may drift from the reference. The learning rate is far smaller than in SFT because you are refining, not teaching from scratch.`,
+  `<b>Example:</b> for one log, the SFT model writes four triages. The one naming “HikariCP pool exhausted after downstream latency spike” beats “database issue”. That pair becomes a DPO example.`],
+ q:[[`Why must SFT come before DPO here?`,`DPO only reweights answers the model can already produce; it can’t teach the JSON format from scratch.`],[`What happens if β is very small?`,`The model is allowed to move far from the reference and may drift or over-optimise the preference data.`]]},
+'ft-eval':{fig:'fteval',cap:'One test set, one harness, four systems.',
+ ex:[`An evaluation is only fair if every system gets the same inputs, the same prompt and the same decoding settings. Otherwise you are comparing setups, not models.`,
+  `Measure structure first (is the JSON valid, are fields right), then quality (is the root cause specific and correct). Use an LLM judge for quality, but hand-score a sample so you know how often the judge agrees with you.`,
+  `<b>Example:</b> base 71% JSON-valid, SFT 98%, SFT+DPO 98% with a better judge score. That is a clean story for your resume.`],
+ q:[[`Why run three seeds?`,`Small test sets are noisy; the mean of three runs shows whether a gain is real.`],[`What should you check after quantizing to Q4?`,`Re-run the same eval; quantization can lower scores slightly.`]]},
+'ft-ship':{fig:'ftship',cap:'Two deployment paths: a single local model, or one server with many adapters.',
+ ex:[`After training you have a small adapter file. For a laptop, merge it into the base and export a quantized GGUF file that Ollama or llama.cpp can run. For a team service, keep adapters separate and let vLLM serve one base model with several adapters.`,
+  `Quantization shrinks the model (Q4_K_M is the usual balance of size and quality) but can cost a little accuracy, so always re-run your eval on the exact file you ship.`,
+  `<b>Example:</b> a 3B model in Q4_K_M is about 2 GB and runs comfortably on an 8 GB laptop GPU.`],
+ q:[[`When would you choose vLLM over Ollama?`,`Many concurrent users, continuous batching, or several LoRA adapters on one base.`],[`Which quant level is the usual default?`,`Q4_K_M; Q8_0 if you need near-lossless quality.`]]},
+'ft-project':{fig:'ftproject',cap:'Five phases, each with a pass/fail gate.',
+ ex:[`The project is staged so you never build on a broken step. Each phase ends with a gate: a number or check that must pass before you continue.`,
+  `This mirrors how real ML teams work: baseline first, then data, then training, then refinement, then shipping, with evaluation at every step.`],
+ q:[[`Why measure the base model before training anything?`,`Without a baseline you can’t show that fine-tuning helped, or by how much.`]]},
+'nw-map':{fig:'nwmap',cap:'Five shifts to watch in 2026.',
+ ex:[`Model progress used to mean “same design, bigger”. In 2026 the design itself is changing on several fronts at once: how deep the computation goes, how attention handles long text, how capacity is spread across experts, and how models are trained after pretraining.`,
+  `A simple way to hold it: MoE gives more knowledge for the same compute; looping gives more thinking for the same parameters; hybrid attention makes long context cheaper; RLVR teaches skills that can be checked.`],
+ q:[[`Which knob adds parameters without adding per-token compute?`,`Mixture-of-experts.`],[`Which knob adds compute without adding parameters?`,`Looping (recurrent depth).`]]},
+'nw-loop':{fig:'nwloop',cap:'A standard stack versus a looped stack: same core weights, used r times.',fig2:'nwglm',cap2:'How GLM-5.4 applies the idea, per Z.ai’s announcement and coverage.',
+ ex:[`A transformer thinks by passing each token’s hidden state up through its layers. More layers mean more steps of computation, but also more parameters to store. A looped transformer reuses one block several times, so the hidden state gets refined repeatedly without new weights.`,
+  `This lets a model “think longer” internally instead of writing a long chain of thought. Researchers call it latent reasoning. Training is trickier: loops can become unstable, so designs re-inject the input at each loop and train with varying loop counts.`,
+  `<b>Example:</b> GLM-5.4 runs 28 of its layers twice. Z.ai reports a 30B experiment where this raised a reasoning benchmark by about 9 points for ~10% more training compute. Big claims about matching 2–3T models are not yet backed by published evals.`],
+ q:[[`What grows with the number of loops, and what stays fixed?`,`Compute per token grows; parameter count stays fixed.`],[`Why did Z.ai adapt GLM-5 rather than train from scratch?`,`Looped models trained from scratch still trail standard ones at the same cost, so they converted a strong pretrained base with continued training.`]]},
+'nw-hybrid':{fig:'nwhybrid',cap:'A 3:1 hybrid: mostly cheap linear layers, some full attention for exact recall.',fig2:'nwcost',cap2:'How cost grows with context length.',
+ ex:[`Full attention compares every token with every earlier token, so doubling the context quadruples the work, and the KV cache keeps growing. Linear attention and state-space models squash the past into a fixed-size memory, so cost grows only linearly, but they recall exact details less well.`,
+  `Hybrids keep a few full-attention layers to look things up precisely and make the rest cheap. That is why recent models handle 1M-token contexts at reasonable cost.`,
+  `<b>Example:</b> in a 48-layer 3:1 hybrid only 12 layers keep a full KV cache, roughly a quarter of the memory of an all-attention model at long context.`],
+ q:[[`What do linear-attention layers trade away for speed?`,`Exact long-range recall; they compress history into a fixed-size state.`],[`Why keep any full-attention layers?`,`To retrieve precise details (names, numbers, code) from far back in the context.`]]},
+'nw-moe':{fig:'nwmoe',cap:'A router picks 2 of 8 experts for this token; the rest stay idle.',
+ ex:[`In a mixture-of-experts layer, the single feed-forward block is replaced by many smaller “experts”. A router looks at each token and sends it to the best few. The model knows a lot (many experts), but each token only pays for the few it visits.`,
+  `The catch is memory and serving: every expert must be loaded, the router must spread work evenly, and big MoE models are split across many GPUs.`,
+  `<b>Example:</b> 816B total / 42B active means you need memory for 816B parameters but each token costs about as much compute as a 42B dense model.`],
+ q:[[`Does MoE reduce the memory needed to serve a model?`,`No. All experts must be in memory; it reduces compute per token.`]]},
+'nw-post':{fig:'nwgrpo',cap:'GRPO with a verifier: answers above the group average are reinforced.',
+ ex:[`RLHF needs people (or a reward model) to say which answer is better. RLVR replaces that with a checker: run the unit tests, compare the maths answer, validate the JSON. The reward is often just 1 or 0.`,
+  `GRPO makes this cheap: for each prompt, sample a group of answers, score them all, and treat each answer’s score relative to the group average as its advantage. No separate value model is needed.`,
+  `<b>Example:</b> for LogLens, reward = 1 if the JSON is valid and the error class matches the gold label, else 0. Four samples score 1, 0, 1, 0, so the two correct ones get pushed up.`],
+ q:[[`Where does RLVR work best?`,`Where correctness can be checked automatically: maths, code, structured outputs.`],[`What does GRPO use instead of a value model?`,`The mean and standard deviation of rewards across a group of samples for the same prompt.`]]},
+'nw-wild':{fig:'nwdiff',cap:'Autoregressive generation versus diffusion-style parallel refinement.',
+ ex:[`Normal LLMs write one token at a time, left to right. Diffusion language models start with a block of masked placeholders and fill them in over a few rounds, many tokens at once. That can be much faster, but quality and tooling are still catching up.`,
+  `Tiny recursive models go the other way: very small networks that loop many times on hard puzzles. They are specialists, but they showed how much looping can do, which fed into the looped-transformer trend.`],
+ q:[[`What is the main advantage of diffusion LMs?`,`Parallel generation, so much higher tokens per second.`]]},
+'nw-open':{fig:'nwrelease',cap:'Sort every model release into four buckets before believing it.',
+ ex:[`New models arrive weekly, and announcements mix real changes with marketing. Reading every release the same way keeps you calm: what changed in the architecture, what changed in training, which evaluations were run (named tasks and sample sizes), and which claims have no method behind them.`,
+  `Open weights matter to you because they can be fine-tuned and self-hosted. Small open models like Granite are for your own training; large open models are for self-hosted inference and for generating training data.`],
+ q:[[`A launch chart shows win rates with no tasks or sample size. How much weight do you give it?`,`Very little until independent or detailed evals appear.`]]}
+};
+[...ENG6,...ENG7].forEach(t=>{if(EXTRA67[t.id])Object.assign(t,EXTRA67[t.id])});
 
 const ENG=[...ENG1,...ENG2,...ENG3,...ENG4,...ENG5,...ENG6,...ENG7];ENG.forEach(t=>t.track='eng');
 TOPICS.forEach(t=>t.track='dl');ML.forEach(t=>t.track='ml');ML2.forEach(t=>t.track='ml');
@@ -3360,11 +3618,13 @@ function vTopic(t){
   if(t.md){h+=`<div class="md">${md(t.md)}</div>`}
   else{
     h+=`<p>${t.tag}</p>`;
+    if(t.ex)h+=`<h2>In plain words</h2><div class="explain">${t.ex.map(p=>`<p>${p}</p>`).join('')}</div>`;
     if(t.use)h+=useHtml(t.use);
     if(t.fig)h+=`<figure class="fig" style="margin-left:0;margin-right:0">${t.fig()}<figcaption>${t.cap}</figcaption></figure>`;
     if(t.fig2)h+=`<figure class="fig" style="margin-left:0;margin-right:0">${t.fig2()}<figcaption>${t.cap2}</figcaption></figure>`;
     h+=`<h2>Key points</h2><ul class="pts">${t.points.map(x=>`<li>${x}</li>`).join('')}</ul>`;
     if(t.formulas.length)h+=`<h2>Formulas</h2>`+t.formulas.map(f=>`<div class="formula"><small>${f[0]}</small><code>${esc(f[1])}</code></div>`).join('');
+    if(t.q)h+=`<h2>Check yourself</h2>`+t.q.map(x=>`<details class="qa"><summary>${x[0]}</summary><p>${x[1]}</p></details>`).join('');
     if(t.links)h+=linksHtml(t.links);
   }
   if(t.src&&t.src.length)h+=`<h2>Source lessons</h2><p class="small">Adapted from AI Engineering from Scratch (MIT license). Open the full lesson for code and exercises.</p><ul class="pts">${t.src.map(x=>`<li><a href="${x[1]}" target="_blank" rel="noopener">${esc(x[0])}</a></li>`).join('')}</ul>`;
