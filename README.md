@@ -8,7 +8,7 @@ A single-page, offline-friendly revision notebook for AI engineering, machine le
 
 | Track | Covers |
 | --- | --- |
-| AI engineering | Production RAG, agent harnesses, inference and serving, evals, AI security, fine-tuning and post-training (LoRA/QLoRA, SFT, DPO) |
+| AI engineering | Production RAG, agent harnesses, inference and serving, evals, AI security, fine-tuning and post-training (LoRA/QLoRA, SFT, DPO), and a dated "what's new" module (looped transformers, hybrid attention, MoE, RLVR) |
 | Machine learning | Foundations, data prep, regression, classification, trees and ensembles, SVM, Bayes, clustering, PCA |
 | Deep learning | Perceptrons and backprop to CNNs, RNNs and transformers |
 | Foundations | Probability and statistics, linear algebra, calculus and optimization, programming and DSA, databases |
