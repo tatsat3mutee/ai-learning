@@ -15,6 +15,9 @@ A single-page, offline-friendly revision notebook for AI engineering, machine le
 | Practice | Coding exercises with starter code, solutions and expected output |
 | Formulas | Every formula from the lessons on one sheet |
 
+
+Every one of the 171 lessons has: a diagram, an **In plain words** explanation with a worked example, key points and formulas, **Check yourself** questions with hidden answers, and **Watch / Read** links (videos, papers, docs).
+
 Progress (lessons read, exercises solved) is saved in your browser's localStorage.
 
 ## Projects linked from the notebook
